@@ -4,8 +4,10 @@
 pushd `dirname ${0}` > /dev/null && plugin_path=`pwd` && popd > /dev/null
 title='Ansible Automation'
 name=$(basename ${0} .sh)
-
-source "${plugin_path}/${name}.local"
+if [ -e "${plugin_path}/${name}.local" ]
+then
+    source "${plugin_path}/${name}.local"
+fi
 github_user='kedwards'
 library="${workspace}/${name}/library"
 filter_plugins="${workspace}/${name}/filter_plugins"
@@ -44,7 +46,7 @@ ansible-openlink_main()
             ln -s ${workspace}/${repo}/src ${library}/modules
         fi
 
-        if [[ ${repo} == "ansible-filter_vault" ]] && [ ! -L ${filter_plugins}/vault.py ]
+        if [[ ${repo} == "ansible-vault-filter" ]] && [ ! -L ${filter_plugins}/vault.py ]
         then
             ln -s ${workspace}/${repo}/src/vault.py ${filter_plugins}/vault.py
         fi

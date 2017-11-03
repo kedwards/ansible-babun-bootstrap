@@ -44,7 +44,7 @@ run()
     sleep 1
     clear
     figlet "${title}"
-    echo "\nConfigure Windows remotes with one of the below PS cmds\n. { iwr -useb https://bit.ly/2v9xsrG } | iex;\n. { iwr -useb http://mrmwebp.enbridge.com/OLFShare/ConfigureRemoteForAnsible.ps1 } | iex;\n. { iwr -useb https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 } | iex;\n\n"
+    echo "\nConfigure Windows remotes with one of the below PS cmds\n. { iwr -useb https://bit.ly/2v9xsrG } | iex;\n. { iwr -useb http://mrmwebp.enbridge.com/OLFShare/ConfigureRemoteForAnsible.ps1 } | iex;\n. { iwr -useb https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1 } | iex;\n"
 }
 
 tests()
@@ -137,7 +137,7 @@ chk_ret_val()
     then
         echo "${green}OK${normal}"
     else
-        echo "${red}OK${normal}"
+        echo "${red}NOT OK${normal}"
     fi
 }
 
@@ -147,19 +147,17 @@ installer()
     then
         cd ~
         clear
-        echo "${cyan}${title} Installer${normal}\n\n"
-
-        echo -n "installing pact dependencies.."
+        echo "${cyan}${title} Installer${normal}\n"
+        echo -n "installing please wait.."
+        # get dependencies plugin
         pact install ${pact_dependencies} &> /dev/null
-        echo "${green}OK${normal}"
-
-        echo -n "installing pip.."
+        #echo "${green}OK${normal}"
+        #echo -n "installing pip.."
         wget -q ${pip_url}
         python get-pip.py &> /dev/null
         rm -r get-pip.py
-        echo "${green}OK${normal}"
-
-        echo -n "Installing pip dependencies.."
+        #echo "${green}OK${normal}"
+        #echo -n "Installing pip dependencies.."
         for dep in ${pip_dependencies}
         do
             pip install ${dep} --quiet &> /dev/null
@@ -201,6 +199,21 @@ installer()
     fi
 }
 
+abb_plug()
+{
+    #$1 = plug directory
+    #$2 = function
+    while IFS="" read -d $'\0' -r plug_main
+    do
+        for file in ${plug_main}/*.sh
+        do
+            name=$(basename ${file} ".sh")
+            source $file
+            ${name}_$2
+        done
+    done < <(find $1 -mindepth 1 -maxdepth 1 -not -path ${disabled_plugin_dir} -type d -print0)
+}
+
 plugin()
 {
     while IFS="" read -d $'\0' -r plugins_main
@@ -218,6 +231,7 @@ clear
 echo "${green}starting up..${normal}"
 installer
 update
-plugin
+# plugin
+abb_plug ${plugin_dir} "main"
 run
 tests
