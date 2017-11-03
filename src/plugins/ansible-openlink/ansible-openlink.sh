@@ -11,7 +11,6 @@ library="${workspace}/${name}/library"
 filter_plugins="${workspace}/${name}/filter_plugins"
 repos=('ansible-openlink' 'ansible-vault-filter' 'ansible-module-devel')
 title="MRM ${title}"
-github_url="https://${github_key}@github.com"
 
 ansible-openlink_test()
 {
@@ -28,7 +27,7 @@ ansible-openlink_main()
     for repo in ${repos}; do
         if [ ! -d  ${workspace}/${repo} ]
         then
-            git clone ${github_url}/${github_user}/${repo}.git ${workspace}/${repo} #&> /dev/null
+            git clone ${github_url}/${github_user}/${repo}.git ${workspace}/${repo} &> /dev/null
         else
             cd  ${workspace}/${repo}
             git checkout master &> /dev/null

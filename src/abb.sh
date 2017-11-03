@@ -10,7 +10,7 @@ title='Ansible Automation'
 pushd `dirname ${0}` > /dev/null && script_dir=`pwd` && popd > /dev/null
 plugin_dir="${script_dir}/plugins"
 disabled_plugin_dir="${plugin_dir}/disabled"
-script_name=$(basename $(readlink -nf $0))
+script_name=$(basename $(readlink -nf $0) ".sh")
 workspace=~/workspace
 installed="/etc/${script_name}.installed"
 
@@ -18,7 +18,7 @@ installed="/etc/${script_name}.installed"
 github_url='https://github.com'
 
 # sysdeps
-pact_dependencies='figlet gcc-g++ wget python python-crypto python-paramiko libyaml-devel libffi-devel'
+pact_dependencies='figlet gcc-g++ wget python python-crypto python-paramiko p7zip libyaml-devel libffi-devel'
 pip_url='https://bootstrap.pypa.io/get-pip.py'
 pip_dependencies=('urllib3[secure]' 'pywinrm' 'cryptography' 'pyyaml' 'jinja2' 'httplib2' 'boto' 'awscli' 'cx_Oracle')
 markupsafe_url='https://github.com/pallets/markupsafe/archive/master.zip'
