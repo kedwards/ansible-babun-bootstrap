@@ -1,9 +1,10 @@
 #!/usr/bin/env zsh
 
-# cli override
+# cli overrides
 bootstrap_ansible_update=0
-ansible_tests=1
+ansible_tests=0
 force_install=0
+exit=0
 
 # sys
 title='Ansible Automation'
@@ -33,6 +34,22 @@ green=\\e[92m
 normal=\\e[0m
 red=\\e[91m
 cyan=\\e[96m
+
+
+show_help()
+{
+    cat << EOF
+Usage: ${script_name}.sh [-f|-t|-u]
+
+Run the ansible installer, with following options:
+
+    -f  force abb install
+    -h  prints this help message
+    -t  runs tests when initializing
+    -u  run updates when initializing
+
+EOF
+}
 
 run()
 {
@@ -196,9 +213,41 @@ plugin()
 
 clear
 echo "${green}starting up..${normal}"
-installer
-update
-# plugin
-plugin ${plugin_dir} "main"
-run
-tests
+while :; do
+    case $1 in
+        -h|-\?|--help)
+            show_help
+            exit=1
+            ;;
+        -f|--force)
+            force_install=1
+            ;;
+        -t|--test)
+            ansible_tests=1
+            ;;
+        -u|--update)
+            bootstrap_ansible_update=1
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            show_help
+            exit=1
+            ;;
+        *)
+            break
+    esac
+    shift
+done
+
+if [ ${exit} -eq 0 ]
+then
+    installer
+    update
+    plugin ${plugin_dir} "main"
+    run
+    tests
+fi
