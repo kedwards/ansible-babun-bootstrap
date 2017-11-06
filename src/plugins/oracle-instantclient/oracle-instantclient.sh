@@ -3,7 +3,8 @@
 name=$(basename ${0} .sh)
 oracle_home='/usr/local/etc/oracle'
 instantclient='instantclient_12_2'
-
+repos=('ansible-oracle-modules')
+github_user='kedwards'
 http_basic_link='http://download.oracle.com/otn/nt/instantclient/122010/instantclient-basic-nt-12.2.0.1.0.zip'
 http_sqlplus_link='http://download.oracle.com/otn/nt/instantclient/122010/instantclient-sqlplus-nt-12.2.0.1.0.zip'
 http_tools_link='http://download.oracle.com/otn/nt/instantclient/122010/instantclient-tools-nt-12.2.0.1.0.zip'
@@ -44,5 +45,21 @@ export PATH=\${PATH}:${oracle_home}/${instantclient}
 EOF
         fi
     fi
+
+    for repo in ${repos}; do
+        if [ ! -d  ${workspace}/${repo} ]
+        then
+            git clone ${github_url}/${github_user}/${repo}.git ${workspace}/${repo} &> /dev/null
+        else
+            cd  ${workspace}/${repo}
+            git checkout master &> /dev/null
+            git pull --rebase &> /dev/null
+        fi
+
+        if [ ! -L ${library}/${repo} ]
+        then
+            ln -s ${workspace}/${repo} ${library}/${repo}
+        fi
+    done
     echo "${green}OK${normal}"
 }

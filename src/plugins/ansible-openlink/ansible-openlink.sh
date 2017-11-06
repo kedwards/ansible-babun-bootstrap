@@ -39,11 +39,12 @@ ansible-openlink_main()
         if [[ ${repo} == "${name}" ]]
         then
             chmod -x ${workspace}/${repo}/conf/{vault_password,vault_key}
+            mkdir -p ${workspace}/${repo}/library
         fi
 
-        if [[ ${repo} == "ansible-module-devel" ]] && [ ! -L ${library}/modules ]
+        if [[ ${repo} == "ansible-module-devel" ]]
         then
-            ln -s ${workspace}/${repo}/src ${library}/modules
+            ln -s ${workspace}/${repo}/src ${library}/${repo}
         fi
 
         if [[ ${repo} == "ansible-vault-filter" ]] && [ ! -L ${filter_plugins}/vault.py ]
