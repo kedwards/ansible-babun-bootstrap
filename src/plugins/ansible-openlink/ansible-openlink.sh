@@ -42,7 +42,7 @@ ansible-openlink_main()
             mkdir -p ${workspace}/${repo}/library
         fi
 
-        if [[ ${repo} == "ansible-module-devel" ]]
+        if [[ ${repo} == "ansible-module-devel" ]] && [ ! -L  ${library}/${repo} ]
         then
             ln -s ${workspace}/${repo}/src ${library}/${repo}
         fi

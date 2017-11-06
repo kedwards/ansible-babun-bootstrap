@@ -36,11 +36,9 @@ cyan=\\e[96m
 
 run()
 {
-    echo -n "configuring ansible virtual environment.."
     cd ${ansible_dir}
     git checkout ${ansible_version} &> /dev/null
     source ./hacking/env-setup &> /dev/null
-    echo "${green}OK${normal}"
     sleep 1
     clear
     figlet "${title}"
@@ -57,30 +55,44 @@ tests()
         chk_ret_val
         sleep 1
 
-        while IFS="" read -d $'\0' -r plugins_test
-        do
-            for file in ${plugins_test}/*.sh
-            do
-                name=$(basename ${file} ".sh")
-                source $file
-                ${name}_test
-            done
-        done < <(find ${plugin_dir} -mindepth 1 -maxdepth 1 -not -path ${disabled_plugin_dir} -type d -print0)
+        plugin ${plugin_dir} "test"
     fi
 }
 
-seed_test_project()
+update()
 {
-    echo -n "seeding test project.."
-    mkdir -p ${workspace}/test/{conf,inventory}
-    touch ${workspace}/test/conf/{vault_password,vault_key}
-    chmod -x ${workspace}/test/conf/{vault_password,vault_key}
-    cat > ${workspace}/test/inventory/hosts << EOF
+    if [ ${bootstrap_ansible_update} -eq 1 ]
+    then
+        cd ${ansible_directory}
+        git checkout devel &> /dev/null
+        git pull --rebase &> /dev/null
+        git submodule update --init --recursive &> /dev/null
+    fi
+}
+
+chk_ret_val()
+{
+    if [ $? -eq 0 ]
+    then
+        echo "${green}OK${normal}"
+    else
+        echo "${red}NOT OK${normal}"
+    fi
+}
+
+mk_test_project ()
+{
+    if [! -d  ${workspace}/test ]
+    then
+        mkdir -p ${workspace}/test/{conf,inventory}
+        touch ${workspace}/test/conf/{vault_password,vault_key}
+        chmod -x ${workspace}/test/conf/{vault_password,vault_key}
+        cat > ${workspace}/test/inventory/hosts << EOF
 # Local control machine
 [local]
 localhost ansible_connection=local
 EOF
-    cat > ${workspace}/test/ansible.cfg << EOF
+        cat > ${workspace}/test/ansible.cfg << EOF
 [defaults]
 ansible_managed = Ansible managed: {file} modified on %Y-%m-%d %H:%M:%S by {uid} on {host}
 inventory = inventory/
@@ -95,50 +107,30 @@ control_path = /tmp/ansible-ssh-%%h-%%p-%%r
 [privilege_escalation]
 become_user = true
 EOF
-    echo "${green}OK${normal}"
-}
-
-configure_shell() {
-    echo -n "configuring zshell for ansible.."
-    cat >> ~/.zshrc <<EOF
-
-#
-# Ansible in Babun
-#
-
-# If you want to update Ansible every time set bootstrap_ansible_update=1
-export bootstrap_ansible_update=0
-
-# Configure Babun for Ansible
-if [ -f ${workspace}/${script_name%.*}/src/${script_name}.sh ]
-then
-    source ${workspace}/${script_name%.*}/src/${script_name}.sh
-fi
-EOF
-    echo "${green}OK${normal}"
-}
-
-update()
-{
-    if [ ${bootstrap_ansible_update} -eq 1 ]
-    then
-        echo -n "updating ansible source.."
-        cd ${ansible_directory}
-        git checkout devel &> /dev/null
-        git pull --rebase &> /dev/null
-        git submodule update --init --recursive &> /dev/null
-        echo "${green}OK${normal}"
     fi
 }
 
-chk_ret_val()
+sys_install()
 {
-    if [ $? -eq 0 ]
-    then
-        echo "${green}OK${normal}"
-    else
-        echo "${red}NOT OK${normal}"
-    fi
+    pact install ${pact_dependencies} &> /dev/null
+
+    wget -q ${pip_url}
+    python get-pip.py &> /dev/null
+    rm -r get-pip.py
+
+    for dep in ${pip_dependencies}
+    do
+        pip install ${dep} --quiet &> /dev/null
+    done
+
+    pip uninstall markupsafe -y --quiet
+
+    cd ${workspace}
+    git clone https://github.com/pallets/markupsafe.git --quiet
+    cd markupsafe
+    python setup.py --without-speedups install &> /dev/null
+    cd ${workspace}
+    rm -rf markupsafe*
 }
 
 installer()
@@ -147,62 +139,50 @@ installer()
     then
         cd ~
         clear
-        echo "${cyan}${title} Installer${normal}\n"
+        echo "${cyan}${title} Installer${normal}"
         echo -n "installing please wait.."
-        # get dependencies plugin
-        pact install ${pact_dependencies} &> /dev/null
-        #echo "${green}OK${normal}"
-        #echo -n "installing pip.."
-        wget -q ${pip_url}
-        python get-pip.py &> /dev/null
-        rm -r get-pip.py
-        #echo "${green}OK${normal}"
-        #echo -n "Installing pip dependencies.."
-        for dep in ${pip_dependencies}
-        do
-            pip install ${dep} --quiet &> /dev/null
-        done
 
-        pip uninstall markupsafe -y --quiet
-
-        cd ${workspace}
-        git clone https://github.com/pallets/markupsafe.git --quiet
-        cd markupsafe
-        python setup.py --without-speedups install &> /dev/null
-        cd ${workspace}
-        rm -rf markupsafe*
-        echo "${green}OK${normal}"
+        sys_install
 
         if [ -d ${ansible_dir} ]
         then
-            echo -n "updating Ansible.."
             cd ${ansible_directory}
             git checkout devel &> /dev/null
             git pull --rebase &> /dev/null
             git submodule update --init --recursive &> /dev/null
-            echo "${green}OK${normal}"
         else
-            echo -n "installing Ansible.."
             git clone ${ansible_repo_url} --recursive ${ansible_dir} --quiet
             cp ${ansible_dir}/examples/ansible.cfg ~/.ansible.cfg
             sed -i 's|#\?transport.*$|transport = paramiko|;s|#host_key_checking = False|host_key_checking = False|' ~/.ansible.cfg
             touch ${installed}
-            echo "${green}OK${normal}"
         fi
-        seed_test_project
-        configure_shell
-        sleep 2
-        clear
-        echo "${green}installed completed, exiting..${normal}"
-        sleep 3
+
+        mk_test_project
+
+        if [ `grep -q '# Ansible in Babun' ~/.zshrc` -eq 1 ]
+        then
+            cat >> ~/.zshrc << EOF
+
+#
+# Ansible in Babun
+#
+# If you want to update Ansible every time set bootstrap_ansible_update=1
+#
+export bootstrap_ansible_update=0
+if [ -f ${workspace}/${script_name%.*}/src/${script_name}.sh ]
+then
+    source ${workspace}/${script_name%.*}/src/${script_name}.sh
+fi
+EOF
+        fi
         exit
     fi
 }
 
-abb_plug()
+plugin()
 {
-    #$1 = plug directory
-    #$2 = function
+    #$1 = plug directory, ${plugin_dir}
+    #$2 = function, [main | test]
     while IFS="" read -d $'\0' -r plug_main
     do
         for file in ${plug_main}/*.sh
@@ -214,24 +194,11 @@ abb_plug()
     done < <(find $1 -mindepth 1 -maxdepth 1 -not -path ${disabled_plugin_dir} -type d -print0)
 }
 
-plugin()
-{
-    while IFS="" read -d $'\0' -r plugins_main
-    do
-        for file in ${plugins_main}/*.sh
-        do
-            name=$(basename ${file} ".sh")
-            source $file
-            ${name}_main
-        done
-    done < <(find ${plugin_dir} -mindepth 1 -maxdepth 1 -not -path ${disabled_plugin_dir} -type d -print0)
-}
-
 clear
 echo "${green}starting up..${normal}"
 installer
 update
 # plugin
-abb_plug ${plugin_dir} "main"
+plugin ${plugin_dir} "main"
 run
 tests

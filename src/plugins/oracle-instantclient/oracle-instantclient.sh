@@ -20,22 +20,22 @@ oracle-instantclient_test()
 oracle-instantclient_main()
 {
     echo -n "Configuring ${name} plugin..."
-    if [ ! -d  ${oracle_home} ]
+    if [ ! -d  ${oracle_home}/tmp ]
     then
-        mkdir -p ${oracle_home}
+        mkdir -p ${oracle_home}/tmp
 
         # Required login and cookie auth from Oracle
         #wget -qO${oracle_home}/basic.zip ${http_basic_link}
+        7za x -o${oracle_home}/ ${workspace}/${script_name}/src/plugins/${name}/instantclient-basiclite-nt-12.2.0.1.0.zip &> /dev/null
         #wget -qO${oracle_home}/sqlplus.zip ${http_sqlplus_link}
+        7za x -o${oracle_home}/ ${workspace}/${script_name}/src/plugins/${name}/instantclient-sqlplus-nt-12.2.0.1.0.zip &> /dev/null
         #wget -qO${oracle_home}/tools.zip ${http_tools_link}
-
-        7za x -o${oracle_home}/ ${workspace}/${script_name}/src/plugins/${name}/${instantclient}.7z &> /dev/null
+        7za x -o${oracle_home}/ ${workspace}/${script_name}/src/plugins/${name}/instantclient-tools-nt-12.2.0.1.0.zip &> /dev/null
 
         if grep -q '# SQLTools for Ansible' ~/.zshrc
         then
             sed -i -E "/export/s/(^(.)*)\/instantclient_.+$/\1\/${instantclient}/" ~/.zshrc
         else
-            #echo -n "configuring zshell for oracle tools.."
             cat >> ~/.zshrc <<EOF
 
 #
