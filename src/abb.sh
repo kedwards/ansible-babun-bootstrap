@@ -110,9 +110,9 @@ configure_shell() {
 export bootstrap_ansible_update=0
 
 # Configure Babun for Ansible
-if [ -f ${workspace}/${script_name%.*}/src/${script_name} ]
+if [ -f ${workspace}/${script_name%.*}/src/${script_name}.sh ]
 then
-    source ${workspace}/${script_name%.*}/src/${script_name}
+    source ${workspace}/${script_name%.*}/src/${script_name}.sh
 fi
 EOF
     echo "${green}OK${normal}"
