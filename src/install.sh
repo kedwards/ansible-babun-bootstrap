@@ -2,7 +2,7 @@
 
 if [ ! -d ~/workspace/abb ]
 then
-  git clone https://github.com/kedwards/abb.git ~/workspace/abb &> /dev/null
+  git clone https://github.com/kedwards/ansible-babun-bootstrap.git ~/workspace/abb &> /dev/null
 else
   cd ~/workspace/abb
   git pull --rebase &> /dev/null
