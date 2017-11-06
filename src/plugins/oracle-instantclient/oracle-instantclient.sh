@@ -34,7 +34,7 @@ oracle-instantclient_main()
         then
             sed -i -E "/export/s/(^(.)*)\/instantclient_.+$/\1\/${instantclient}/" ~/.zshrc
         else
-            echo -n "configuring zshell for oracle tools.."
+            #echo -n "configuring zshell for oracle tools.."
             cat >> ~/.zshrc <<EOF
 
 #
