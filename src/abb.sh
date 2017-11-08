@@ -99,7 +99,7 @@ chk_ret_val()
 
 mk_test_project ()
 {
-    if [! -d  ${workspace}/test ]
+    if [ ! -d  ${workspace}/test ]
     then
         mkdir -p ${workspace}/test/{conf,inventory}
         touch ${workspace}/test/conf/{vault_password,vault_key}
