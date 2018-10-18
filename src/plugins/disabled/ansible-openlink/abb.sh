@@ -1,5 +1,4 @@
-#!/usr/bin/sh
-opts=':fthu:v:'
+#!/usr/bin/env zsh
 
 # cli overrides
 bootstrap_ansible_update=0
@@ -25,7 +24,7 @@ markupsafe_url='https://github.com/pallets/markupsafe/archive/master.zip'
 # ansible
 ansible_dir=/usr/local/etc/ansible
 ansible_repo_url="https://github.com/ansible/ansible.git"
-ansible_version='stable-2.7'
+ansible_version='stable-2.4'
 
 # console colours
 green=\\e[92m
@@ -36,11 +35,11 @@ cyan=\\e[96m
 show_help()
 {
     cat << EOF
-Usage: ${script_name}.sh [-f|-t|-u|-v]
+Usage: ${script_name}.sh [-f|-t|-u]
 
-Run the installer, with following options:
+Run the ansible installer, with following options:
 
-    -f  force install
+    -f  force abb install
     -h  prints this help message
     -t  runs tests when initializing
     -u  run updates when initializing
@@ -49,8 +48,7 @@ Run the installer, with following options:
 EOF
 }
 
-OPTIND=1
-while getopts ${opts} opt
+while getopts fhtuv opt
 do
     case "$opt" in
       f)  force_install=1;;
@@ -61,11 +59,10 @@ do
       v)  verbose=1;;
       \?)		# unknown flag
       	  show_help
-	  	    exit 1;;
+	  	  exit 1;;
     esac
 done
-
-shift $(($OPTIND - 1))
+shift `expr $OPTIND - 1`
 
 if [ ${verbose} -eq 1 ]; then
     # -- verbose enables
@@ -103,7 +100,7 @@ tests()
 
 update()
 {
-    if [ ${bootstrap_ansible_update} -eq 1 ]
+    if [ ! ${bootstrap_ansible_update} ]
     then
         echo -n "Updating Ansible checkout.."
         cd ${ansible_dir}
@@ -196,7 +193,7 @@ sys_install()
 
 installer()
 {
-    if [ ! -f ${installed} ];
+    if [ ! -f ${installed} ] || [ ${force_install} -eq 1 ]
     then
         cd ~
         echo "${cyan}${title} Installer${normal}"
@@ -205,17 +202,16 @@ installer()
 
         if [ ! -d ${ansible_dir} ]
         then
-          echo -n "Retrieving Ansible source (github).."
-          git clone ${ansible_repo_url} --recursive ${ansible_dir} --quiet
-          cp ${ansible_dir}/examples/ansible.cfg ~/.ansible.cfg
-          sed -i 's|#\?transport.*$|transport = paramiko|;s|#host_key_checking = False|host_key_checking = False|' ~/.ansible.cfg
-          echo "OK"
-        else
-            echo -n "Updating Ansible source (github).."
-            cd ${ansible_dir}
-            git checkout devel &> /dev/null
-            git pull --rebase &> /dev/null
-            git submodule update --init --recursive &> /dev/null
+            # echo -n "Updating Ansible source (github).."
+            # cd ${ansible_dir}
+            # git checkout devel &> /dev/null
+            # git pull --rebase &> /dev/null
+            # git submodule update --init --recursive &> /dev/null
+            # echo "OK"
+            echo -n "Retrieving Ansible source (github).."
+            git clone ${ansible_repo_url} --recursive ${ansible_dir} --quiet
+            cp ${ansible_dir}/examples/ansible.cfg ~/.ansible.cfg
+            sed -i 's|#\?transport.*$|transport = paramiko|;s|#host_key_checking = False|host_key_checking = False|' ~/.ansible.cfg
             echo "OK"
         fi
 
