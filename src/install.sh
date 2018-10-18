@@ -2,7 +2,7 @@
 
 if [ ! -d ~/workspace/abb ]
 then
-  git clone https://github.com/kedwards/ansible-babun-bootstrap.git ~/workspace/abb
+  git clone -b master --single-branch https://github.com/kedwards/ansible-babun-bootstrap.git ~/workspace/abb
 else
   cd ~/workspace/abb
   git pull
