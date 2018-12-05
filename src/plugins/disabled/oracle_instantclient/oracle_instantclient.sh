@@ -31,4 +31,19 @@ oracle-instantclient_main()
     fi
 
     echo "${green}OK${normal}"
+    
+    zshrc=$(grep -q '# Oracle' ~/.zshrc)
+    if [ ! ${zshrc} ]
+    then
+        cat >> ~/.zshrc <<EOF
+# Oracle
+export TNS_ADMIN=C:\\\\path\\\\to\\\\orace\\\\network\\\\admin
+export PATH=\${PATH}:${oracle_home}/${instantclient}
+EOF
+    elif [ $(grep -q ${instantclient} ~/.zshrc) ]
+    then
+        sed -i -E "/export/s/(^(.)*)\/instantclient_.+$/\1\/${instantclient}/" ~/.zshrc
+    fi
+
+    echo "${green}OK${normal}"
 }
