@@ -17,7 +17,7 @@ workspace=~/workspace
 installed="/etc/${script_name}.installed"
 
 # sysdeps
-pact_dependencies='figlet gcc-g++ wget python python-crypto python-paramiko p7zip libyaml-devel libffi-devel'
+pact_dependencies='figlet gcc-g++ wget python python-crypto python-setuptools python-paramiko p7zip libyaml-devel libffi-devel'
 pip_url='https://bootstrap.pypa.io/get-pip.py'
 pip_dependencies=('urllib3[secure]' 'pywinrm' 'cryptography' 'pyyaml' 'jinja2' 'httplib2' 'boto' 'awscli' 'cx_Oracle')
 markupsafe_url='https://github.com/pallets/markupsafe/archive/master.zip'
